@@ -11,15 +11,15 @@ from dotenv import load_dotenv
 import pyaudio
 import time
 import re
-
+import pyttsx3
 
 load_dotenv()
-wake_word = 'jarvis'
+wake_word = 'computer'
 groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 web_cam = cv2.VideoCapture(0)
-# os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 sys_msg = (
     'You are a multi—modal AI voice assistant. Your user may or may not have attached a photo for context '
@@ -107,6 +107,7 @@ def function_call(prompt):
         model="llama3-70b-8192"
     )
     response = chat_completion.choices[0].message
+    print('response content', response.content)
     return response.content
 
 
@@ -128,6 +129,7 @@ def web_cam_capture():
 def get_clipboard_text():
     clipboard_content = pyperclip.paste()
     if isinstance(clipboard_content,str):
+        print('clipboard' , clipboard_content)
         return clipboard_content
     else:
         print("Error: Clipboard content is not a string")
@@ -164,6 +166,20 @@ def speak(text):
                     player_stream.write(chunk)
                     stream_start = True
 
+def speak2(text):
+    engine = pyttsx3.init()
+    
+    # Optional: Configure voice settings
+    voices = engine.getProperty('voices')
+    engine.setProperty('voice', voices[1].id)  # Index 1 is often a female voice, similar to 'nova'
+    engine.setProperty('rate', 175)  # Adjust speaking rate (words per minute)
+    engine.setProperty('volume', 0.8)  # Adjust volume (0.0 to 1.0)
+    
+    # Speak the text
+    engine.say(text)
+    
+    # Wait for the speech to finish
+    engine.runAndWait()
 
 def wav_to_text(audio_path):
     segments, _ = whisper_model.transcribe(audio_path)
@@ -196,14 +212,14 @@ def callback(recognizer, audio):
         elif "extract clipboard" in call:
             print('Extracting clipboard content...')
             paste = get_clipboard_text()
-            prompt = f'{clean_prompt}\n\n CLIPBOARD CONTENT: {paste}'
+            clean_prompt = f'{clean_prompt}\n\n CLIPBOARD CONTENT: {paste}'
             visual_context = None
         else:
             visual_context = None
 
         response = groq_prompt(prompt=clean_prompt, img_context=visual_context)
         print(f'JARVIS: {response}')
-        speak(response)
+        speak2(response)
 
 def start_listening():
     with source as s:
