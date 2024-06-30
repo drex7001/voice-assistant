@@ -12,14 +12,15 @@ import pyaudio
 import time
 import re
 import pyttsx3
+import numpy as np
 
 load_dotenv()
-wake_word = 'computer'
+wake_word = 'Alexa'
 groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 web_cam = cv2.VideoCapture(0)
-os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+# os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 sys_msg = (
     'You are a multi—modal AI voice assistant. Your user may or may not have attached a photo for context '
@@ -218,8 +219,8 @@ def callback(recognizer, audio):
             visual_context = None
 
         response = groq_prompt(prompt=clean_prompt, img_context=visual_context)
-        print(f'JARVIS: {response}')
-        speak2(response)
+        print(f'Alexa: {response}')
+        speak(response)
 
 def start_listening():
     with source as s:
